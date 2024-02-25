@@ -1,0 +1,175 @@
+
+<html>
+  <head>
+    <style>
+        /*Adding a square div in the center of the screen just for creating a shadow around the p5 canvas.  */
+        .shadowDiv{
+            width: 600px;
+            height: 600px; 
+            position:absolute;
+            top:50%;
+            left:50%;
+            margin-left: -300px;
+            margin-top: -300px;
+            box-shadow:
+                0px 0px 2.2px rgba(0, 0, 0, 0.084),
+                0px 0px 5.3px rgba(0, 0, 0, 0.121),
+                0px 0px 10px rgba(0, 0, 0, 0.15),
+                0px 0px 17.9px rgba(0, 0, 0, 0.179),
+                0px 0px 33.4px rgba(0, 0, 0, 0.216),
+                0px 0px 80px rgba(0, 0, 0, 0.3)
+;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script>
+    <script>
+
+        var cnv;
+        const squares = [];
+        const SQUARE_SIZE = 25;
+        const MIN_SPEED = 5;
+        const MAX_SPEED = 20;
+        const SIDELENGTH = 600
+        const numSquaresX = SIDELENGTH / SQUARE_SIZE;
+        const numSquaresY = SIDELENGTH / SQUARE_SIZE;
+        
+        var balls = [];
+        var LEFT_COLOUR;
+        var RIGHT_COLOUR;
+
+        function centerCanvas() {
+            var x = (windowWidth - width) / 2;
+            var y = (windowHeight - height) / 2;
+            cnv.position(x, y);
+        }
+
+        function setup() {
+            cnv = createCanvas(SIDELENGTH, SIDELENGTH);
+            centerCanvas();
+            LEFT_COLOUR = color("#C1C1C1");
+            RIGHT_COLOUR = color("#2C4251");
+            
+            for (let i = 0; i < numSquaresX; i++) {
+                squares[i] = [];0.1
+                for (let j = 0; j < numSquaresY; j++) {
+                    i < numSquaresX / 2 ? squares[i][j] = LEFT_COLOUR : squares[i][j] = RIGHT_COLOUR;
+                }
+            }
+
+            balls = [
+            {
+                x: SIDELENGTH / 4,
+                y: SIDELENGTH / 2,
+                dx: 8,
+                dy: -8,
+                reverseColor: LEFT_COLOUR,
+                ballColor: RIGHT_COLOUR,
+            },
+            {
+                x: (SIDELENGTH / 4) * 3,
+                y: SIDELENGTH / 2,
+                dx: -8,
+                dy: 8,
+                reverseColor: RIGHT_COLOUR,
+                ballColor: LEFT_COLOUR,
+            },
+        ];
+        }
+
+        function windowResized() {
+            centerCanvas();
+        }
+
+        function draw() {
+            drawSquares();
+
+            balls.forEach((ball) => {
+                drawBall(ball);
+                checkSquareCollision(ball);
+                checkBoundaryCollision(ball);
+                ball.x += ball.dx;
+                ball.y += ball.dy;
+
+                addRandomness(ball);
+            });
+        }
+
+        function drawBall(ball) {
+            fill(ball.ballColor);
+            ellipse(ball.x, ball.y, SQUARE_SIZE)
+        }
+
+        function drawSquares() {
+            for (let i = 0; i < numSquaresX; i++) {
+                for (let j = 0; j < numSquaresY; j++) {
+                    c = squares[i][j];
+                    fill(c)
+                    noStroke();
+                    square(i*SQUARE_SIZE, j*SQUARE_SIZE, SQUARE_SIZE);
+                }
+            }
+        }
+
+        function checkSquareCollision(ball) {
+            //Checking multiple points around the ball
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
+                const checkX = ball.x + Math.cos(angle) * (SQUARE_SIZE / 2);
+                const checkY = ball.y + Math.sin(angle) * (SQUARE_SIZE / 2);
+
+                const i = Math.floor(checkX / SQUARE_SIZE);
+                const j = Math.floor(checkY / SQUARE_SIZE);
+
+                if (i >= 0 && i < numSquaresX && j >= 0 && j < numSquaresY) {
+                    if (squares[i][j] !== ball.reverseColor) {
+                        // Update square color upon hitting a square
+                        squares[i][j] = ball.reverseColor;
+
+                        // Determine bounce direction based on the angle
+                        if (Math.abs(Math.cos(angle)) > Math.abs(Math.sin(angle))) {
+                        ball.dx = -ball.dx;
+                        } else {
+                        ball.dy = -ball.dy;
+                        }
+                    }
+                }
+            }
+        }
+
+        function checkBoundaryCollision(ball) {
+            if (
+                ball.x + ball.dx > canvas.width - SQUARE_SIZE / 2 ||
+                ball.x + ball.dx < SQUARE_SIZE / 2
+            ) {
+                ball.dx = -ball.dx;
+            }
+            if (
+                ball.y + ball.dy > canvas.height - SQUARE_SIZE / 2 ||
+                ball.y + ball.dy < SQUARE_SIZE / 2
+            ) {
+                ball.dy = -ball.dy;
+            }
+        }
+
+    function addRandomness(ball) {
+        //Adding some randomness to avoid getting stuck in a repeating pattern
+        ball.dx += Math.random() * 0.01 - 0.005;
+        ball.dy += Math.random() * 0.01 - 0.005;
+
+        // Limit maximum speed
+        ball.dx = Math.min(Math.max(ball.dx, -MAX_SPEED), MAX_SPEED);
+        ball.dy = Math.min(Math.max(ball.dy, -MAX_SPEED), MAX_SPEED);
+
+        // Maintain mininum speed
+        if (Math.abs(ball.dx) < MIN_SPEED)
+            ball.dx = ball.dx > 0 ? MIN_SPEED : -MIN_SPEED;
+        if (Math.abs(ball.dy) < MIN_SPEED)
+            ball.dy = ball.dy > 0 ? MIN_SPEED : -MIN_SPEED;
+    }
+
+        
+    </script>
+  </head>
+  <body style="background-color:rgb(179, 179, 179)">
+    <div class="shadowDiv"></div>
+  </body>
+</html>
